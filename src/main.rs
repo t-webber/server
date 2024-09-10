@@ -16,13 +16,25 @@
 #![allow(clippy::string_add)]
 #![allow(clippy::missing_docs_in_private_items)]
 #![allow(clippy::question_mark_used)]
+#![allow(clippy::mod_module_files)]
+#![allow(clippy::exhaustive_structs)]
 
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use database::functions::{establish_connection, get_notes};
 use std::io;
+
+mod database;
 
 #[get("/")]
 async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+    match establish_connection() {
+        Ok(mut conn) => match get_notes(&mut conn) {
+            Ok(notes) => HttpResponse::Ok().body(format!("{notes:?}")),
+            Err(err) => HttpResponse::BadRequest().body(format!("Failed to fetch notes: {err}")),
+        },
+        Err(err) => HttpResponse::InternalServerError()
+            .body(format!("Failed to connect to database: {err}")),
+    }
 }
 
 #[post("/echo")]

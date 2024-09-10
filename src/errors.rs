@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use core::fmt;
 
 pub type Res<T> = Result<T, String>;

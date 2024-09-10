@@ -3,3 +3,4 @@ target
 /diesel/
 *.lock
 src/database/main.rs
+*.local

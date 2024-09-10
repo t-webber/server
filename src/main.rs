@@ -24,10 +24,15 @@ use database::functions::{
     create_note, delete_note, edit_body, edit_title, establish_connection, get_notes,
 };
 use diesel::SqliteConnection;
+use dotenvy::dotenv;
+use errors::Res;
+use load_env::get_env_var;
 use serde::Deserialize;
 use std::io;
 
 mod database;
+mod errors;
+mod load_env;
 
 fn connect_db() -> Result<SqliteConnection, HttpResponse> {
     match establish_connection() {
@@ -104,8 +109,30 @@ async fn route_create_notes(title: String) -> HttpResponse {
     }
 }
 
+fn get_addrs() -> Res<(String, u16)> {
+    dotenv().ok();
+    let port = get_env_var("PORT")?;
+    let host = get_env_var("HOST")?;
+    Ok((
+        host,
+        port.parse()
+            .map_err(|err| format!("Invalid PORT variable. Couldn't convert to integer: {err}"))?,
+    ))
+}
+
 #[actix_web::main]
 async fn main() -> io::Result<()> {
+    #[allow(clippy::print_stderr)]
+    let addrs = get_addrs().unwrap_or_else(|err| {
+        eprintln!(
+            "Please specify a correct PORT or HOST variable in your `.env.local` file. An error occured while fetching these variables: {err}"
+        );
+        ("127.0.0.1".to_owned(), 8080)
+    });
+    #[allow(clippy::print_stdout)]
+    {
+        println!("Server running on http://{}:{}", addrs.0, addrs.1);
+    };
     HttpServer::new(|| {
         App::new()
             .service(route_edit_body)
@@ -114,7 +141,7 @@ async fn main() -> io::Result<()> {
             .service(route_delete_note)
             .service(route_create_notes)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(addrs)?
     .run()
     .await
 }

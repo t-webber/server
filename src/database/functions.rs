@@ -1,19 +1,17 @@
 #![allow(unused)]
 
-use std::env;
-
+use super::models::{NewNote, Note};
+use super::schema::notes::{self, dsl};
 use chrono::Utc;
 use diesel::prelude::*;
 use dotenvy::dotenv;
-
-use super::errors::{Check, Res, ToCheck, ToR};
-use super::models::{NewNote, Note};
-use super::schema::notes::{self, dsl};
+use raspi_server::errors::{Check, Res, ToCheck, ToR};
+use raspi_server::load_env::get_env_var;
+use std::env;
 
 pub fn establish_connection() -> Res<SqliteConnection> {
     dotenv().ok();
-    let database_url =
-        env::var("DATABASE_URL").map_err(|err| format!("DATABASE_URL must be set: {err}"))?;
+    let database_url = get_env_var("DATABASE_URL")?;
     SqliteConnection::establish(&database_url)
         .map_err(|err| format!("Error connecting to {database_url}: {err}"))
 }

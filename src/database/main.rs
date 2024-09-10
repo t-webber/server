@@ -1,4 +1,3 @@
-mod errors;
 mod functions;
 mod models;
 mod schema;

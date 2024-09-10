@@ -34,7 +34,7 @@
     diesel migration generate init
     ```
 
-1. Add the `migrations` and `diesel` folders to the `.gitignore` file.
+1. Update your `.gitignore` file.
 1. To create a migration, run
 
     ```sh
@@ -70,4 +70,4 @@
     diesel migration redo
     ```
 
-1. You can also define and run the migrations from 🦀! See [docs](https://diesel.rs/guides/getting-started) for more details.
+1. You can know define and run the migrations from 🦀! See [docs](https://diesel.rs/guides/getting-started) for more details.

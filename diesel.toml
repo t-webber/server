@@ -1,6 +1,0 @@
-[print_schema]
-file = "src/diesel/schema.rs"
-custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
-
-[migrations_directory]
-dir = "D:\\files\\dev\\web\\actix.raspi\\diesel\\migrations"

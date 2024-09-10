@@ -4,3 +4,4 @@ target
 *.lock
 src/database/main.rs
 *.local
+diesel.toml

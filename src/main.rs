@@ -9,7 +9,6 @@
     clippy::nursery,
     // clippy::cargo
 )]
-#![feature(stmt_expr_attributes)]
 #![allow(clippy::blanket_clippy_restriction_lints)]
 #![allow(clippy::implicit_return)]
 #![allow(clippy::single_call_fn)]

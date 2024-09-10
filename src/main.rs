@@ -19,40 +19,100 @@
 #![allow(clippy::mod_module_files)]
 #![allow(clippy::exhaustive_structs)]
 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use database::functions::{establish_connection, get_notes};
+use actix_web::{delete, get, post, web, App, HttpResponse, HttpServer, Responder};
+use database::functions::{
+    create_note, delete_note, edit_body, edit_title, establish_connection, get_notes,
+};
+use diesel::SqliteConnection;
+use serde::Deserialize;
 use std::io;
 
 mod database;
 
-#[get("/")]
-async fn hello() -> impl Responder {
+fn connect_db() -> Result<SqliteConnection, HttpResponse> {
     match establish_connection() {
+        Ok(conn) => Ok(conn),
+        Err(err) => {
+            Err(HttpResponse::InternalServerError().body(format!("Failed to fetch notes: {err}")))
+        }
+    }
+}
+
+#[get("/get-notes")]
+async fn route_get_notes() -> impl Responder {
+    match connect_db() {
         Ok(mut conn) => match get_notes(&mut conn) {
             Ok(notes) => HttpResponse::Ok().body(format!("{notes:?}")),
             Err(err) => HttpResponse::BadRequest().body(format!("Failed to fetch notes: {err}")),
         },
-        Err(err) => HttpResponse::InternalServerError()
-            .body(format!("Failed to connect to database: {err}")),
+        Err(res) => res,
     }
 }
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+#[derive(Deserialize)]
+struct Edit {
+    id: i32,
+    content: String,
 }
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
+#[post("/edit-title")]
+async fn route_edit_title(req_body: web::Json<Edit>) -> HttpResponse {
+    match connect_db() {
+        Ok(mut conn) => match edit_title(&mut conn, req_body.id, &req_body.content) {
+            Ok(()) => HttpResponse::Ok().finish(),
+            Err(err) => HttpResponse::BadRequest().body(format!("Failed to fetch notes: {err}")),
+        },
+        Err(err) => err,
+    }
+}
+
+#[post("/edit-body")]
+async fn route_edit_body(req_body: web::Json<Edit>) -> HttpResponse {
+    match connect_db() {
+        Ok(mut conn) => match edit_body(&mut conn, req_body.id, &req_body.content) {
+            Ok(()) => HttpResponse::Ok().finish(),
+            Err(err) => HttpResponse::BadRequest().body(format!("Failed to edit body: {err}")),
+        },
+        Err(err) => err,
+    }
+}
+
+#[derive(Deserialize)]
+struct NoteId {
+    id: i32,
+}
+
+#[delete("/delete-notes")]
+async fn route_delete_note(req_body: web::Path<NoteId>) -> HttpResponse {
+    match connect_db() {
+        Ok(mut conn) => match delete_note(&mut conn, req_body.id) {
+            Ok(()) => HttpResponse::Ok().finish(),
+            Err(err) => HttpResponse::BadRequest().body(format!("Failed to delete note: {err}")),
+        },
+        Err(err) => err,
+    }
+}
+
+#[post("/create-note")]
+async fn route_create_notes(title: String) -> HttpResponse {
+    match connect_db() {
+        Ok(mut conn) => match create_note(&mut conn, &title) {
+            Ok(id) => HttpResponse::Ok().body(id.to_string()),
+            Err(err) => HttpResponse::BadRequest().body(format!("Failed to create note: {err}")),
+        },
+        Err(err) => err,
+    }
 }
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
+            .service(route_edit_body)
+            .service(route_edit_title)
+            .service(route_get_notes)
+            .service(route_delete_note)
+            .service(route_create_notes)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

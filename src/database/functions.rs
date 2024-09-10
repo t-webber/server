@@ -41,8 +41,8 @@ pub fn create_note(conn: &mut SqliteConnection, title: &str) -> Res<i32> {
         .map(|note| note.id)
 }
 
-pub fn edit_body(conn: &mut SqliteConnection, id: i32, body: &str) -> Check {
-    diesel::update(dsl::notes.find(id))
+pub fn edit_body(conn: &mut SqliteConnection, note_id: i32, body: &str) -> Check {
+    diesel::update(dsl::notes.find(note_id))
         .set((
             dsl::body.eq(body),
             dsl::updated_at.eq(Utc::now().naive_utc()),
@@ -51,12 +51,18 @@ pub fn edit_body(conn: &mut SqliteConnection, id: i32, body: &str) -> Check {
         .to_check()
 }
 
-pub fn edit_title(conn: &mut SqliteConnection, id: i32, title: &str) -> Check {
-    diesel::update(dsl::notes.find(id))
+pub fn edit_title(conn: &mut SqliteConnection, note_id: i32, title: &str) -> Check {
+    diesel::update(dsl::notes.find(note_id))
         .set((
             dsl::title.eq(title),
             dsl::updated_at.eq(Utc::now().naive_utc()),
         ))
+        .execute(conn)
+        .to_check()
+}
+
+pub fn delete_note(conn: &mut SqliteConnection, note_id: i32) -> Check {
+    diesel::delete(dsl::notes.find(note_id))
         .execute(conn)
         .to_check()
 }

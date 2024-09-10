@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 use dotenvy::dotenv;
-use models::{NewPost, Post};
-use schema::posts::{self, dsl, published};
+use models::{NewUser, User};
+use schema::users::{self, dsl};
 use std::env;
 
 pub mod models;
@@ -16,46 +16,47 @@ pub fn establish_connection() -> SqliteConnection {
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-fn show_posts(conn: &mut SqliteConnection) {
-    let results = dsl::posts
-        .filter(published.eq(true))
+fn show_users(conn: &mut SqliteConnection) {
+    let results = dsl::users
         .limit(5)
-        .select(Post::as_select())
+        .select(User::as_select())
         .load(conn)
-        .expect("Error loading posts");
+        .expect("Error loading users");
 
     dbg!(&results);
 
-    println!("Displaying {} posts", results.len());
-    for post in results {
-        println!("{}", post.title);
-        println!("-----------\n");
-        println!("{}", post.body);
+    println!("Displaying {} users", results.len());
+    for user in results {
+        println!("{user:?}\n-------------");
     }
 }
 
-pub fn create_post(conn: &mut SqliteConnection, title: &str, body: &str) -> Post {
-    let new_post = NewPost { title, body };
+pub fn create_user(conn: &mut SqliteConnection, email: &str) -> User {
+    let mut split = email.split('@').next().unwrap().split('.');
+    let new_user = NewUser {
+        email,
+        firstname: split.next().unwrap(),
+        lastname: split.next().unwrap(),
+    };
 
-    diesel::insert_into(posts::table)
-        .values(&new_post)
-        .returning(Post::as_returning())
+    diesel::insert_into(users::table)
+        .values(&new_user)
+        .returning(User::as_returning())
         .get_result(conn)
-        .expect("Error saving new post")
+        .expect("Error saving new user")
 }
 
-pub fn publish_post(conn: &mut SqliteConnection, id: i32) {
-    let post = diesel::update(dsl::posts.find(id))
-        .set(published.eq(true))
-        .returning(Post::as_returning())
-        .get_result(conn)
-        .unwrap();
-    println!("Published post {}", post.title);
-}
+// pub fn publish_user(conn: &mut SqliteConnection, id: i32) {
+//     let user = diesel::update(dsl::users.find(id))
+//         .returning(User::as_returning())
+//         .get_result(conn)
+//         .unwrap();
+//     println!("Published user {}", user.email);
+// }
 
 fn main() {
     let conn = &mut establish_connection();
-    // create_post(conn, "Hello", "World");
-    publish_post(conn, 5);
-    show_posts(conn);
+    create_user(conn, "bobby.bob982E@gmail.com");
+    // publish_user(conn, 5);
+    show_users(conn);
 }

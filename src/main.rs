@@ -29,6 +29,8 @@ use load_env::get_env_var;
 use serde::Deserialize;
 use std::io;
 
+#[cfg(feature = "secured")]
+mod auth;
 mod database;
 mod errors;
 mod load_env;

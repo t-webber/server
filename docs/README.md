@@ -2,28 +2,28 @@
 
 ## Run this project
 
-1. Setup `diesel` (see below).
-1. Add `PORT` and `HOST` to the `.env.local` file
+1. Configure and setup  `diesel` (see bellow).
+
+2. Add `PORT` and `HOST` to the `.env.local` file
 
    ```env
+   # .env.local
    PORT=8080
    HOST="localhost"
    ```
 
-1. Setup diesel with
+3. If you want to secure the connection, you can activate de `secured` flag. You will need to add `KEY`  (32 randoom characters) and `NONCE` (12 random characters) to your `env.local`:
 
-   ```sh
-   diesel setup
+   ```env
+   # .env.local
+   PORT=8080
+   HOST="localhost"
+   KEY="azertyuiopqsdfghjklmwxcvbn123456"
+   NONCE="1234567890AZ"
    ```
 
-1. Change `diesel.toml` print_schema path to `src/database/schema.rs`.
-1. Run the migrations with
 
-   ```sh
-   diesel migration generate --diff-schema init
-   ```
-
-1. Run the project with `cargo run`.
+4. Run the project with `cargo run`.
 
 ## Seting up diesel
 

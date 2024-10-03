@@ -10,6 +10,9 @@ path = "src/database/main.rs"
 
 [dependencies]
 actix-web = "4.9.0"
+aes-gcm = "0.10.3"
+argon2 = "0.5.3"
+base64 = "0.22.1"
 chrono = "0.4.38"
 diesel = { version = "2.2.4", features = [
     "sqlite",
@@ -17,5 +20,10 @@ diesel = { version = "2.2.4", features = [
     "chrono",
 ] }
 dotenvy = "0.15.7"
+rand_core = { version = "0.6.4", features = ["std"] }
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
+
+[features]
+# default = ["secured"]
+secured = []
